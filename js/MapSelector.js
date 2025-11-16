@@ -3,7 +3,8 @@ import MapLoader from "./MapLoader";
 
 class MapSelector extends Control {
 
-	maps = [];
+	maps_pool = [];
+	maps_notpool = [];
 	selected = {};
 	listElement = null;
 	selectedLabel = null;
@@ -19,7 +20,7 @@ class MapSelector extends Control {
 		</div>
 	</div>
 	`;
-	static pool = ["amber", "bagel", "box", "elkridge", "fland", "marathon", "oasis-2", "saltern-2", "packed", "plasma", "exo", "feint"];
+	static pool = ["amber", "bagel", "box", "elkridge", "fland", "marathon", "oasis-2", "saltern-2", "packed", "plasma", "exo", "feint", "centcomm"];
 
 	constructor(opt_options) {
 		const options = opt_options || {};
@@ -30,7 +31,8 @@ class MapSelector extends Control {
 			target: options.target
 		});
 
-		this.maps = options.maps || [];
+		this.maps_pool = [];
+		this.maps_notpool = [];
 		this.selected = options.selected;
 		this.mapChangeCallback = options.onMapChanged || function(){};
 
@@ -39,13 +41,10 @@ class MapSelector extends Control {
 		element.getElementById('map-selector-button').addEventListener('click', () => this.listElement.classList.toggle('hidden'), false);
 
 		MapSelector.loadMapList().then(list => {
-			let pool = list.filter((i) => pool.includes(i.id));
-			pool.sort();
-			
-			let non_pool = list.filter((i) => !pool.includes(i.id));
-			non_pool.sort();
-			
-			this.maps = pool.concat(non_pool);
+			list.maps.sort();
+
+			this.maps_pool = list.maps.filter((i) => MapSelector.pool.includes(i.id));
+			this.maps_notpool = list.maps.filter((i) => !MapSelector.pool.includes(i.id));
 
 			this.updateList();
 
@@ -64,18 +63,29 @@ class MapSelector extends Control {
 		this.listElement.innerHTML = '';
 		this.selectedLabel.innerHTML = this.selected.name;
 
-		for (const map of this.maps) {
-
-			const mapButton = document.createElement('button');
-			mapButton.innerHTML = map.name;
-
-			if (this.selected.id === map.id)
-				mapButton.setAttribute("disabled", "")
-			else
-				mapButton.addEventListener('click', this.handleMapChange.bind(this, map), false);
-
-			this.listElement.appendChild(mapButton);
+		for (const map of this.maps_pool) {
+			this.add_button(map);
 		}
+
+		const separator = document.createElement('span');
+		separator.innerHTML = "Legacy:";
+		this.listElement.appendChild(separator);
+		
+		for (const map of this.maps_notpool) {
+			this.add_button(map);
+		}
+	}
+
+	add_button(map) {
+		const mapButton = document.createElement('button');
+		mapButton.innerHTML = map.name;
+
+		if (this.selected.id === map.id)
+			mapButton.setAttribute("disabled", "")
+		else
+			mapButton.addEventListener('click', this.handleMapChange.bind(this, map), false);
+
+		this.listElement.appendChild(mapButton);
 	}
 
 	static async loadMapList() {
