@@ -19,6 +19,7 @@ class MapSelector extends Control {
 		</div>
 	</div>
 	`;
+	static pool = ["amber", "bagel", "box", "elkridge", "fland", "marathon", "oasis-2", "saltern-2", "packed", "plasma", "exo", "feint"];
 
 	constructor(opt_options) {
 		const options = opt_options || {};
@@ -38,7 +39,13 @@ class MapSelector extends Control {
 		element.getElementById('map-selector-button').addEventListener('click', () => this.listElement.classList.toggle('hidden'), false);
 
 		MapSelector.loadMapList().then(list => {
-			this.maps = list.maps;
+			let pool = list.filter((i) => pool.includes(i.id));
+			pool.sort();
+			
+			let non_pool = list.filter((i) => !pool.includes(i.id));
+			non_pool.sort();
+			
+			this.maps = pool.concat(non_pool);
 
 			this.updateList();
 
@@ -82,5 +89,6 @@ class MapSelector extends Control {
 	}
 
 }
+
 
 export default MapSelector;
